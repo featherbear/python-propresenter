@@ -1,7 +1,7 @@
 import xmltodict
 import os
 
-class Stub():
+class File():
     fileName = None
     fileDirectory = None
 
