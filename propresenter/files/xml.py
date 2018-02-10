@@ -1,18 +1,16 @@
-import xmltodict
-import os
+#import xmltodict
+import Cxmltodict as xmltodict
 
 class File():
-    fileName = None
-    fileDirectory = None
+    filePath = None
 
-    def __init__(self, fileName: str = None, fileDirectory: str = None):
-        if fileName and fileDirectory:
-            self.fileName = fileName
-            self.fileDirectory = fileDirectory
+    def __init__(self, filePath: str = None, force_list: tuple = ()):
+        if filePath:
+            self.filePath= filePath
 
-        with open(os.path.join(self.fileDirectory, self.fileName), "r", encoding="utf-8") as f:
-            self.data = xmltodict.parse(f.read(), force_list=("RVDisplaySlide"))
+        with open(self.filePath, "r", encoding="utf-8") as f:
+            self.data = xmltodict.parse(f.read(), force_list=force_list, ordered_mixed_children=True)
 
     def save(self):
-        with open(os.path.join(self.fileDirectory, self.fileName), "w") as f:
+        with open(self.filePath, "w") as f:
             f.write(xmltodict.unparse(self.data))
