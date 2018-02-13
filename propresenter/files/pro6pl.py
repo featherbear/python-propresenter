@@ -7,6 +7,8 @@
 #               array-events
 #       array-events
 
+import os.path
+import urllib.parse
 from collections import OrderedDict
 from datetime import datetime
 from uuid import uuid4
@@ -75,7 +77,7 @@ class File(XML):
 
             def __repr__(self):
                 return self.__class__.__name__ + '("%s")' % self.name
-                #return str(self.data)
+                # return str(self.data)
 
             @property
             def order(self):
@@ -94,6 +96,41 @@ class File(XML):
             def children(self):
                 return Children(self.data["array"][0])
 
+            def __init__(elem, *args):
+                class add:
+                    @staticmethod
+                    def folder(folderName, typeNumber: int = 2):
+                        root = elem.data["array"][0]
+                        data = {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
+                                "@modifiedDate": getDateString(), "@type": typeNumber, "@isExpanded": "true",
+                                "@hotFolderType": "2", "@__order__": self.currentOrder + 1,
+                                "array": [
+                                    {
+                                        "@rvXMLIvarName": "children",
+                                        "@__order__": self.currentOrder + 2
+                                    }, {
+
+                                        "@rvXMLIvarName": "events",
+                                        "@__order__": self.currentOrder + 3
+                                    }
+                                ]}
+                        if "RVPlaylistNode" in root:
+                            root["RVPlaylistNode"].append(data)
+                        else:
+                            root["RVPlaylistNode"] = [data]
+
+                        # an existing file might need the order of all the proceeding elements shifted
+                        self.currentOrder += 3
+                        return Folder(root["RVPlaylistNode"][-1])
+                        # return super
+
+                    @staticmethod
+                    def playlist(playlistName):
+                        # format is exactly the same, except that playlists have a type number of 3
+                        self.add.folder(playlistName, 3)
+
+                elem.add = add()
+
         class Playlist(Element):
             {"displayName": ": playlist 1 :",
              "UUID": "9280e80b-352d-4ac9-9cf5-847be42bcd3f",
@@ -101,36 +138,284 @@ class File(XML):
              "modifiedDate": "2018-02-10T13:25:24+s00:00",
              "type": "3",
              "isExpanded": "true", "hotFolderType": "2"}
-            pass
+
+            @property
+            def children(self):
+                return Children(self.data["array"][0])
+
+            def __init__(elem, *args):
+                class add:
+                    @staticmethod
+                    def audio(audioPath):
+                        root = elem.data["array"][0]
+                        data = {
+                            "@UUID": uuid(),
+                            "@displayName": os.path.basename(audioPath),  # doesn't matter
+                            "@actionType": 0,
+                            "@enabled": 1,
+                            "@timeStamp": 0,
+                            "@delayTime": 0,
+                            "@tags": "",
+                            "@nextCueUUID": "00000000-0000-0000-0000-000000000000",
+                            "behavior": "1",
+                            "alignment": "4",
+                            "dateAdded": "",
+                            "@__order__": self.currentOrder + 1,
+                            "RVAudioElement": [{
+                                "@rvXMLIvarName": "element",
+                                "@volume": 1,
+                                "@playRate": 1,
+                                "@loopBehaviour": 0,
+                                "@audioType": 0,
+                                "@inPoint": 0,
+                                "@outPoint": 0,
+                                "@displayName": os.path.basename(audioPath),  # doesn't matter
+                                "@source": urllib.parse.quote(audioPath),
+                                "array": [{
+                                    "@rvXMLIvarName": "effects",
+                                }],
+                            }]
+                        }
+                        if "RVAudioCue" in root:
+                            root["RVAudioCue"].append(data)
+                        else:
+                            root["RVAudioCue"] = [data]
+
+                        # an existing file might need the order of all the proceeding elements shifted
+                        self.currentOrder += 1
+                        # no return
+
+                    @staticmethod
+                    def video(videoPath):
+                        root = elem.data["array"][0]
+                        data = {
+                            "@UUID": uuid(),
+                            "@displayName": os.path.basename(videoPath),  # doesn't matter
+                            "@actionType": 0,
+                            "@enabled": 1,
+                            "@timeStamp": 0,
+                            "@delayTime": 0,
+                            "@tags": "",
+                            "@nextCueUUID": "00000000-0000-0000-0000-000000000000",
+                            "@behavior": 2,
+                            "@alignment": 4,
+                            "@dateAdded": "",
+                            "@__order__": self.currentOrder + 1,
+                            "RVVideoElement": [{
+                                "@UUID": None,
+                                "@rvXMLIvarName": "element",
+                                "@displayName": os.path.basename(videoPath),  # doesn't matter
+                                "@displayDelay": 0,
+                                "@locked": 0,
+                                "@persistent": 0,
+                                "@typeID": 0,
+                                "@fromTemplate": 0,
+                                "@bezelRadius": 0,
+                                "@drawingFill": 0,
+                                "@drawingShadow": 0,
+                                "@drawingStroke": 0,
+                                "@fillColor": "1 1 1 1",
+                                "@rotation": 0,
+                                "@source": urllib.parse.quote(videoPath),
+                                "@flippedHorizontally": "false",
+                                "@flippedVertically": "false",
+                                "@scaleBehavior": 0,
+                                "@manufactureURL": "",
+                                "@manufactureName": "",
+                                "@format": "",
+                                "@scaleSize": "{1.0, 1.0}",
+                                "@imageOffset": "{0.0, 0.0}",
+                                "@frameRate": "23.9760246276855",
+                                "@audioVolume": "2",
+                                "@inPoint": "6130",  #
+                                "@outPoint": "12661",  #
+                                "@playRate": "0.603773584905662",  #
+                                "@playbackBehavior": "1",
+                                "@timeScale": "600",
+                                "@endPoint": "12662",  #
+                                "@naturalSize": "{1920, 1080}",  #
+                                "@fieldType": "2",
+                                "RVRect3D": [{
+                                    "@rvXMLIvarName": "position",
+                                    "#text": "{0 0 0 0 0}",
+                                }],
+                                "shadow": [{
+                                    "@rvXMLIvarName": "shadow",
+                                    "#text": "0 | 0 0 0 0 | {0, 0}"
+                                }],
+                                "dictionary": [{
+                                    "@rvXMLIvarName": "stroke",
+                                    "NSColor": [{
+                                        "@rvXMLDictionaryKey": "RVShapeElementStrokeColorKey",
+                                        "#text": "0 0 0 1"
+                                    }],
+                                    "NSNumber": [{
+                                        "@rvXMLDictionaryKey": "RVShapeElementStrokeWidthKey",
+                                        "@hint": "float",
+                                        "#text": "1.0"
+                                    }]
+                                }],
+                                "array": [{
+                                    "@rvXMLIvarName": "effects"
+                                }]
+                            }]
+                        }
+                        data["RVVideoElement"][0]["@UUID"] = data["@UUID"].lower()
+                        if "RVMediaCue" in root:
+                            root["RVMediaCue"].append(data)
+                        else:
+                            root["RVMediaCue"] = [data]
+
+                        # an existing file might need the order of all the proceeding elements shifted
+                        self.currentOrder += 1
+                        # return
+
+                    @staticmethod
+                    def image(imagePath):
+                        root = elem.data["array"][0]
+                        data = {
+                            "@UUID": uuid(),
+                            "@displayName": os.path.basename(imagePath),  # doesn't matter
+                            "@actionType": 0,
+                            "@enabled": 1,
+                            "@timeStamp": 0,
+                            "@delayTime": 0,
+                            "@tags": "",
+                            "@nextCueUUID": "00000000-0000-0000-0000-000000000000",
+                            "@behavior": 2,
+                            "@alignment": 4,
+                            "@dateAdded": "",
+                            "@__order__": self.currentOrder + 1,
+                            "RVImageElement": [{
+                                "@UUID": None,
+                                "@rvXMLIvarName": "element",
+                                "@displayName": os.path.basename(imagePath),  # doesn't matter
+                                "@displayDelay": 0,
+                                "@locked": 0,
+                                "@persistent": 0,
+                                "@typeID": 0,
+                                "@fromTemplate": 0,
+                                "@bezelRadius": 0,
+                                "@drawingFill": 0,
+                                "@drawingShadow": 0,
+                                "@drawingStroke": 0,
+                                "@fillColor": "1 1 1 1",
+                                "@rotation": 0,
+                                "@source": urllib.parse.quote(imagePath),
+                                "@flippedHorizontally": "false",
+                                "@flippedVertically": "false",
+                                "@scaleBehavior": 0,
+                                "@manufactureName": "",
+                                "@format": "",
+                                "@scaleSize": "{1.0, 1.0}",
+                                "@imageOffset": "{0.0, 0.0}",
+                                "RVRect3D": [{
+                                    "@rvXMLIvarName": "position",
+                                    "#text": "{0 0 0 0 0}",
+                                }],
+                                "shadow": [{
+                                    "@rvXMLIvarName": "shadow",
+                                    "#text": "0 | 0 0 0 0 | {0, 0}"
+                                }],
+                                "dictionary": [{
+                                    "@rvXMLIvarName": "stroke",
+                                    "NSColor": [{
+                                        "@rvXMLDictionaryKey": "RVShapeElementStrokeColorKey",
+                                        "#text": "0 0 0 1"
+                                    }],
+                                    "NSNumber": [{
+                                        "@rvXMLDictionaryKey": "RVShapeElementStrokeWidthKey",
+                                        "@hint": "float",
+                                        "#text": "1.0"
+                                    }]
+                                }],
+                                "array": [{
+                                    "@rvXMLIvarName": "effects"
+                                }]
+                            }]
+                        }
+                        data["RVImageElement"][0]["@UUID"] = data["@UUID"].lower()
+
+                        if "RVMediaCue" in root:
+                            root["RVMediaCue"].append(data)
+                        else:
+                            root["RVMediaCue"] = [data]
+
+                        # an existing file might need the order of all the proceeding elements shifted
+                        self.currentOrder += 1
+                        # return
+
+                    @staticmethod
+                    def document(documentPath):
+                        root = elem.data["array"][0]
+                        data = {
+                            "@UUID": uuid(),
+                            "@displayName": os.path.basename(filePath),  # doesn't matter
+                            "@filePath": urllib.parse.quote(filePath),
+                            "@selectedArrangementID": "",
+                            "@actionType": 0,
+                            "@enabled": 1,
+                            "@timeStamp": 0,
+                            "@delayTime": 0,
+                            "@__order__": self.currentOrder + 1,
+                        }
+                        if "RVDocumentCue" in root:
+                            root["RVDocumentCue"].append(data)
+                        else:
+                            root["RVDocumentCue"] = [data]
+
+                        # an existing file might need the order of all the proceeding elements shifted
+                        self.currentOrder += 1
+                        # no return
+
+                    @staticmethod
+                    def header(headerName, *args, headerColour=None):
+                        if headerColour:
+                            if propresenter.utils.colorUtil.checks.hex(headerColour):
+                                headerColour = " ".join(
+                                    (propresenter.utils.colorUtil.conversion.hex_to_hsl(headerColour) + ("1",))[:4])
+                            elif type(headerColour) == tuple:
+                                if all(map(propresenter.utils.colorUtil.checks.between0_255, headerColour)):
+                                    headerColour = " ".join((propresenter.utils.colorUtil.conversion.rgb_to_hsl(
+                                        headerColour[:3]) + headerColour[3:] + (1,))[:4])
+                                elif all(map(propresenter.utils.colorUtil.checks.between0_1, headerColour)):
+                                    headerColour = " ".join((headerColour + (1,))[:4])
+                        if not headerColour:
+                            headerColour = "0.894117647058824 0.894117647058824 0.894117647058824 1"
+
+                        root = elem.data["array"][0]
+                        data = {"@displayName": headerName,
+                                "@UUID": uuid(),
+                                "@actionType": 0,
+                                "@enabled": 1,
+                                "@timeStamp": 0,
+                                "@delayTime": 0,
+                                "@timerType": 0,
+                                "@countDownToTimeFormat": 0,
+                                "@allowOverrun": "false",
+                                "@timerUUID": "00000000-0000-0000-0000-000000000000",
+                                "@endTime": "No Limit",
+                                "@duration": "00:00:00",
+                                "@color": headerColour,
+                                "@__order__": self.currentOrder + 1,
+                                }
+                        if "RVHeaderCue" in root:
+                            root["RVHeaderCue"].append(data)
+                        else:
+                            root["RVHeaderCue"] = [data]
+
+                        # an existing file might need the order of all the proceeding elements shifted
+                        self.currentOrder += 1
+                        return Header(root["RVHeaderCue"][-1])
+
+                elem.add = add()
 
         class Document(Element):
-            {"UUID" : "49DC84D0-95B4-4C91-803A-2A2D4A644C3E",
-            "displayName" : "You Hold Me Now.pro6",
-            "filePath" : "D%3A%5CUsers%5CAndrew%5CDocuments%5CProPresenter6%5CYou%20Hold%20Me%20Now.pro6",
-            "selectedArrangementID" : "C703E052-A20A-4491-A598-FD9A96D3CD7E",
-            "actionType" : "0",
-            "enabled" : "1",
-            "timeStamp" : "0",
-            "delayTime" : "0"}
             pass
 
-        class Header(Element):
-            {"UUID": "69B7E786-E532-41EF-9BE4-D92D60AEE560",
-             "displayName": "New Header",
-             "actionType": "0",
-             "enabled": "1",
-             "timeStamp": "0",
-             "delayTime": "0",
-             "duration": "00:00:00",
-             "endTime": "No Limit",
-             "timerType": "0",
-             "countDownToTimeFormat": "0",
-             "allowOverrun": "false",
-             "color": "0.498039215686275 0 1 0.235294117647059",
-             "timerUUID": "00000000-0000-0000-0000-000000000000"}
-
+        class Header(Element, propresenter.utils.HSLa_Handler):
             def __init__(self, *args):
-                print("  INIT HEADER")
+                HSLa_Store = self.data["@color"]
 
         class Media(Element):
             # Contains RVVideoElement, RVImageElement
@@ -184,40 +469,41 @@ class File(XML):
                     #     pass
 
         self.children = Children(self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0])
-        print("RCHILDREN", self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0])
-        print(" CHILDREN", self.children)
+        # print("RCHILDREN", self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0])
+        # print(" CHILDREN", self.children)
         print("LOADED")
-
 
         class add:
             @staticmethod
-            def folder(folderName):
+            def folder(folderName, **kwargs):
+                typeNumber = kwargs.get("typeNumber", 2)  # hide the typeNumber from autocompletes of development IDEs
 
                 root = self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0]
                 data = {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
-                 "@modifiedDate": getDateString(), "@type": "2", "@isExpanded": "true", "@hotFolderType": "2", "@__order__": self.currentOrder+1,
-                "array": [
-                    {
-                        "@rvXMLIvarName": "children",
-                        "@__order__": self.currentOrder + 2
-                    }, {
+                        "@modifiedDate": getDateString(), "@type": typeNumber, "@isExpanded": "true",
+                        "@hotFolderType": "2", "@__order__": self.currentOrder + 1,
+                        "array": [
+                            {
+                                "@rvXMLIvarName": "children",
+                                "@__order__": self.currentOrder + 2
+                            }, {
 
-                        "@rvXMLIvarName": "events",
-                        "@__order__": self.currentOrder + 3
-                    }
-                ]}
+                                "@rvXMLIvarName": "events",
+                                "@__order__": self.currentOrder + 3
+                            }
+                        ]}
                 if "RVPlaylistNode" in root:
-                    root.append(data)
+                    root["RVPlaylistNode"].append(data)
                 else:
                     root["RVPlaylistNode"] = [data]
 
+                # an existing file might need the order of all the proceeding elements shifted
                 self.currentOrder += 3
+                return Folder(root["RVPlaylistNode"][-1])
 
-                #self.children.append(
-                print(self.children)
             @staticmethod
             def playlist(playlistName):
-                pass
+                # format is exactly the same, except that playlists have a type number of 3
+                self.add.folder(playlistName, typeNumber=3)
+
         self.add = add()
-
-
