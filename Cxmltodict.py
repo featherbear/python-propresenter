@@ -76,7 +76,7 @@ class _DictSAXHandler(object):
         self.namespace_declarations = OrderedDict()
         self.force_list = force_list
         self.ordered_mixed_children = ordered_mixed_children
-        self.counter = 0
+        self.order_counter = 0
 
     def _build_name(self, full_name):
         if not self.namespaces:
@@ -96,8 +96,8 @@ class _DictSAXHandler(object):
         if not isinstance(attrs, dict):
             ret_attrs = self.dict_constructor(zip(attrs[0::2], attrs[1::2]))
         if self.ordered_mixed_children:
-            ret_attrs["__order__"] = self.counter
-            self.counter += 1
+            ret_attrs["__order__"] = self.order_counter
+            self.order_counter += 1
         return ret_attrs
 
     def startNamespaceDecl(self, prefix, uri):
@@ -374,6 +374,7 @@ def parse(xml_input, encoding=None, expat=expat, process_namespaces=False,
         parser.ParseFile(xml_input)
     else:
         parser.Parse(xml_input, True)
+    if ordered_mixed_children: return handler.item, handler.order_counter-1
     return handler.item
 
 
