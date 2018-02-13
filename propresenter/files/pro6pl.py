@@ -194,8 +194,7 @@ class File(XML):
             def folder(folderName):
 
                 root = self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0]
-                root["RVPlaylistNode"] = root.get("RVPlaylistNode", []) + [
-                {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
+                data = {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
                  "@modifiedDate": getDateString(), "@type": "2", "@isExpanded": "true", "@hotFolderType": "2", "@__order__": self.currentOrder+1,
                 "array": [
                     {
@@ -206,7 +205,11 @@ class File(XML):
                         "@rvXMLIvarName": "events",
                         "@__order__": self.currentOrder + 3
                     }
-                ]}]
+                ]}
+                if "RVPlaylistNode" in root:
+                    root.append(data)
+                else:
+                    root["RVPlaylistNode"] = [data]
 
                 self.currentOrder += 3
 
