@@ -37,6 +37,7 @@ class File(XML):
             print("EXISTING FILE")
             XML.__init__(self, filePath, ("array", "RVPlaylistNode", "RVDocumentCue", "RVHeaderCue"))
         else:
+            print("Created new playlist file")
             self.data = {
                 "RVPlaylistDocument": {
                     "@versionNumber": 600,
@@ -52,13 +53,12 @@ class File(XML):
                         "@hotFolderType": 2,  ################
                         "@rvXMLIvarName": "rootNode",
                         "array": [
-                            OrderedDict({
+                            {
                                 "@rvXMLIvarName": "children",
-                                "RVDocumentCue": []
-                            }), OrderedDict({
+                            }, {
 
                                 "@rvXMLIvarName": "events"
-                            })
+                            }
                         ]
                     }],
                     "array": {
@@ -74,7 +74,8 @@ class File(XML):
                 return obj
 
             def __repr__(self):
-                return str(self.data)
+                return self.__class__.__name__ + '("%s")' % self.name
+                #return str(self.data)
 
             @property
             def order(self):
@@ -89,7 +90,6 @@ class File(XML):
                 self.data["@displayName"] = name
 
         class Folder(Element):
-            {"displayName":"folder root","UUID":"0ab9db2d-c005-4376-84dc-5905546bb645","smartDirectoryURL":"" ,"modifiedDate":"2018-02-10T07:21:33+00:00" ,"type":"2" ,"isExpanded":"true" ,"hotFolderType":"2"}
             @property
             def children(self):
                 return Children(self.data["array"][0])
@@ -184,5 +184,37 @@ class File(XML):
                     #     pass
 
         self.children = Children(self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0])
-        print(self.children)
+        print("RCHILDREN", self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0])
+        print(" CHILDREN", self.children)
         print("LOADED")
+
+
+        class add:
+            @staticmethod
+            def folder(folderName):
+
+                root = self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0]
+                root["RVPlaylistNode"] = root.get("RVPlaylistNode", []) + [
+                {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
+                 "@modifiedDate": getDateString(), "@type": "2", "@isExpanded": "true", "@hotFolderType": "2", "@__order__": self.currentOrder+1,
+                "array": [
+                    {
+                        "@rvXMLIvarName": "children",
+                        "@__order__": self.currentOrder + 2
+                    }, {
+
+                        "@rvXMLIvarName": "events",
+                        "@__order__": self.currentOrder + 3
+                    }
+                ]}]
+
+                self.currentOrder += 3
+
+                #self.children.append(
+                print(self.children)
+            @staticmethod
+            def playlist(playlistName):
+                pass
+        self.add = add()
+
+
