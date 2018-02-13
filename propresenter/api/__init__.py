@@ -1,7 +1,14 @@
+# want a remote (websocket) implementation?
+# Check out Jeff's repo @ github.com/jeffmikels/ProPresenter-API
+
 class Connection():
-    def __init__(self):
+    def __new__(cls):
+        obj = super().__new__(cls)
+
         # https://sjohannes.wordpress.com/2012/03/23/win32-python-getting-all-window-titles/
         import ctypes
+        obj._hwnd = None
+
         EnumWindows = ctypes.windll.user32.EnumWindows
         EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
         GetWindowText = ctypes.windll.user32.GetWindowTextW
@@ -22,13 +29,16 @@ class Connection():
 
                 if title.startswith("ProPresenter") and b"ProPresenter.exe" in getClassName(hwnd):
                     # print("Found ProPresenter!")
-                    self._hwnd = hwnd
+                    obj._hwnd = hwnd
             return True
+
         EnumWindows(EnumWindowsProc(foreach_window), 0)
 
-        if not self._hwnd:
-            raise Exception("ProPresenter not running! Or an error has occured")
-        self._PostMessage = ctypes.windll.user32.PostMessageA
+        if not obj._hwnd:
+            return
+            # raise Exception("ProPresenter not running! Or an error has occured")
+        obj._PostMessage = ctypes.windll.user32.PostMessageA
+        return obj
 
     def _sendKey(self, keyCode: int):
         # https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
