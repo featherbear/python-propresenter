@@ -1,45 +1,23 @@
-# Root PlaylistNode UUID is caps
-#   Folder PlaylistNode UUID is lowercase
-#       array-children
-#           array[RVPlaylistNode] - lowercase UUID | actual playlist
-#               array-children
-#                   array[RVDocumentCue] - uppercase UUID ### This UUID doesn't relate to anything; The file is loaded by filepath and arrangementID
-#               array-events
-#       array-events
-
 import os.path
 import urllib.parse
 from collections import OrderedDict
 from datetime import datetime
 from uuid import uuid4
+import mutagen
 
 import propresenter.utils
 from .xml import File as XML
 
 getDateString = lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
-
-
-def uuid():
-    return str(uuid4()).upper()
-
-
-"""
-Interesting things
-RVTemplateDocument  versionNumber, os, buildNumber
-"""
+uuid = lambda: str(uuid4()).upper()
 
 
 class File(XML):
     # Reminder that variables act as pointers instead of creating a new copy!
-    # TODO self.data
-    # TODO self.filePath
-
     def __init__(self, filePath: str = None):
         if filePath:
-            print("EXISTING FILE")
             XML.__init__(self, filePath, ("array", "RVPlaylistNode", "RVDocumentCue", "RVHeaderCue"))
         else:
-            print("Created new playlist file")
             self.data = {
                 "RVPlaylistDocument": {
                     "@versionNumber": 600,
@@ -50,9 +28,9 @@ class File(XML):
                         "@UUID": uuid(),
                         "@smartDirectoryURL": "",
                         "@modifiedDate": getDateString(),
-                        "@type": 0,  ######################
-                        "@isExpanded": 0,  #################
-                        "@hotFolderType": 2,  ################
+                        "@type": 0,
+                        "@isExpanded": 0,
+                        "@hotFolderType": 2,
                         "@rvXMLIvarName": "rootNode",
                         "array": [
                             {
@@ -71,13 +49,12 @@ class File(XML):
 
         class Element():
             def __new__(cls, *args, **kwargs):
-                obj = super(Element, cls).__new__(cls)
-                obj.data = args[0]
-                return obj
+                _obj = super(Element, cls).__new__(cls)
+                _obj.data = args[0]
+                return _obj
 
             def __repr__(self):
                 return self.__class__.__name__ + '("%s")' % self.name
-                # return str(self.data)
 
             @property
             def order(self):
@@ -101,9 +78,14 @@ class File(XML):
                     @staticmethod
                     def folder(folderName, typeNumber: int = 2):
                         root = elem.data["array"][0]
-                        data = {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
-                                "@modifiedDate": getDateString(), "@type": typeNumber, "@isExpanded": "true",
-                                "@hotFolderType": "2", "@__order__": self.currentOrder + 1,
+                        data = {"@displayName": folderName,
+                                "@UUID": uuid(),
+                                "@smartDirectoryURL": "",
+                                "@modifiedDate": getDateString(),
+                                "@type": typeNumber,
+                                "@isExpanded": True,
+                                "@hotFolderType": "2",
+                                "@__order__": self.currentOrder + 1,
                                 "array": [
                                     {
                                         "@rvXMLIvarName": "children",
@@ -119,10 +101,8 @@ class File(XML):
                         else:
                             root["RVPlaylistNode"] = [data]
 
-                        # an existing file might need the order of all the proceeding elements shifted
                         self.currentOrder += 3
                         return Folder(root["RVPlaylistNode"][-1])
-                        # return super
 
                     @staticmethod
                     def playlist(playlistName):
@@ -132,13 +112,6 @@ class File(XML):
                 elem.add = add()
 
         class Playlist(Element):
-            {"displayName": ": playlist 1 :",
-             "UUID": "9280e80b-352d-4ac9-9cf5-847be42bcd3f",
-             "smartDirectoryURL": "",
-             "modifiedDate": "2018-02-10T13:25:24+s00:00",
-             "type": "3",
-             "isExpanded": "true", "hotFolderType": "2"}
-
             @property
             def children(self):
                 return Children(self.data["array"][0])
@@ -147,6 +120,11 @@ class File(XML):
                 class add:
                     @staticmethod
                     def audio(audioPath):
+                        __mediaObject = mutagen.File(audioPath)
+                        if __mediaObject is None:
+                            raise Exception("Bad media file")
+                        __mediaObjectDuration = int(__mediaObject.info.length * 600)
+
                         root = elem.data["array"][0]
                         data = {
                             "@UUID": uuid(),
@@ -187,6 +165,11 @@ class File(XML):
 
                     @staticmethod
                     def video(videoPath):
+                        __mediaObject = mutagen.File(videoPath)
+                        if __mediaObject is None:
+                            raise Exception("Bad media file")
+                        __mediaObjectDuration = int(__mediaObject.info.length * 600) # timeScale = 600
+
                         root = elem.data["array"][0]
                         data = {
                             "@UUID": uuid(),
@@ -205,36 +188,48 @@ class File(XML):
                                 "@UUID": None,
                                 "@rvXMLIvarName": "element",
                                 "@displayName": os.path.basename(videoPath),  # doesn't matter
-                                "@displayDelay": 0,
-                                "@locked": 0,
-                                "@persistent": 0,
-                                "@typeID": 0,
-                                "@fromTemplate": 0,
-                                "@bezelRadius": 0,
-                                "@drawingFill": 0,
-                                "@drawingShadow": 0,
-                                "@drawingStroke": 0,
-                                "@fillColor": "1 1 1 1",
-                                "@rotation": 0,
+                                # "@displayDelay": 0,
+                                # "@locked": 0,
+                                # "@persistent": 0,
+                                # "@typeID": 0,
+                                # "@fromTemplate": 0,
+                                # "@bezelRadius": 0,
+                                # "@drawingFill": 0,
+                                # "@drawingShadow": 0,
+                                # "@drawingStroke": 0,
+                                # "@fillColor": "1 1 1 1",
+                                # "@rotation": 0,
                                 "@source": urllib.parse.quote(videoPath),
+
+                                "@scaleBehavior": 0,
+                                    # 0 - Scale to Fit
+                                    # 1 - Scale to Fill
+                                    # 2 - Stretch to Fit
+                                #"@manufactureURL": "",
+                                #"@manufactureName": "",
+                                #"@format": "",
+                                #"@scaleSize": "{1.0, 1.0}",
+                                #"@imageOffset": "{0.0, 0.0}",
+
+                                #"@frameRate": "23.9760246276855", #???????????/
+
+
+
+
                                 "@flippedHorizontally": "false",
                                 "@flippedVertically": "false",
-                                "@scaleBehavior": 0,
-                                "@manufactureURL": "",
-                                "@manufactureName": "",
-                                "@format": "",
-                                "@scaleSize": "{1.0, 1.0}",
-                                "@imageOffset": "{0.0, 0.0}",
-                                "@frameRate": "23.9760246276855",
-                                "@audioVolume": "2",
-                                "@inPoint": "6130",  #
-                                "@outPoint": "12661",  #
-                                "@playRate": "0.603773584905662",  #
-                                "@playbackBehavior": "1",
-                                "@timeScale": "600",
-                                "@endPoint": "12662",  #
-                                "@naturalSize": "{1920, 1080}",  #
-                                "@fieldType": "2",
+
+                                "@audioVolume": "1",
+                                "@playRate": "1",
+                                "@playbackBehavior": "0", # STOP on finish
+
+                                "@timeScale": "600", # WHY THOUGH???
+                                "@inPoint": "0",  #
+                                "@outPoint": __mediaObjectDuration,  #
+                                "@endPoint": __mediaObjectDuration,  #
+
+                                #"@naturalSize": "{1920, 1080}",  #
+                                "@fieldType": "0",
                                 "RVRect3D": [{
                                     "@rvXMLIvarName": "position",
                                     "#text": "{0 0 0 0 0}",
@@ -276,6 +271,9 @@ class File(XML):
                         data = {
                             "@UUID": uuid(),
                             "@displayName": os.path.basename(imagePath),  # doesn't matter
+                                # on the playlist view, the extension is stripped away
+                                #   # "aaaaa." -> "aaaaa"
+                                # Full name shows up on the contiguous view
                             "@actionType": 0,
                             "@enabled": 1,
                             "@timeStamp": 0,
@@ -350,8 +348,8 @@ class File(XML):
                         root = elem.data["array"][0]
                         data = {
                             "@UUID": uuid(),
-                            "@displayName": os.path.basename(filePath),  # doesn't matter
-                            "@filePath": urllib.parse.quote(filePath),
+                            "@displayName": os.path.basename(documentPath),  # doesn't matter
+                            "@filePath": urllib.parse.quote(documentPath),
                             "@selectedArrangementID": "",
                             "@actionType": 0,
                             "@enabled": 1,
@@ -504,6 +502,6 @@ class File(XML):
             @staticmethod
             def playlist(playlistName):
                 # format is exactly the same, except that playlists have a type number of 3
-                self.add.folder(playlistName, typeNumber=3)
+                return Playlist(self.add.folder(playlistName, typeNumber=3).data)
 
         self.add = add()
