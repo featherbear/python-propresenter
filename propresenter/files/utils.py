@@ -1,8 +1,23 @@
 import colorsys
 import re
+from _datetime import datetime
+from uuid import uuid4
 
-def validUUID(uuid):
-    return re.match("^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$", uuid, re.IGNORECASE) is not None
+
+def getDateString():
+    return datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+
+class UUID:
+    @staticmethod
+    def generateUUID():
+        return str(uuid4()).upper()
+
+    @staticmethod
+    def validUUID(uuid):
+        return re.match("^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$", uuid,
+                        re.IGNORECASE) is not None
+
 
 class HSLa_Handler:
     HSLa_Store = None
@@ -66,6 +81,7 @@ class HSLa_Handler:
             raise ValueError("Invalid HEX colour")
         self.HSLa_Store = " ".join(map(str, (*colorUtil.conversion.hex_to_hsl(match), alpha)))
 
+
 class colorUtil:
     # https://www.viget.com/articles/equating-color-and-transparency/
     # target = opacity x overlay + (1-opacity) x background
@@ -109,7 +125,8 @@ class colorUtil:
             # #NewYearNewMe #NewYearsResolution_WriteReadableCode
             # hip-hip hooray for unreadable code!
             # https://stackoverflow.com/a/29643643
-            return (int(("".join([c * 2 for c in hex]) if len(hex) == 3 else hex).lstrip("#")[i:i + 2], 16) for i in (0, 2, 4))
+            return (int(("".join([c * 2 for c in hex]) if len(hex) == 3 else hex).lstrip("#")[i:i + 2], 16) for i in
+                    (0, 2, 4))
 
         @staticmethod
         def hex_to_hsl(hex):

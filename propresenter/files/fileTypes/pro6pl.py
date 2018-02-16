@@ -1,19 +1,14 @@
 import os.path
 import urllib.parse
 from collections import OrderedDict
-from datetime import datetime
-from uuid import uuid4
+
 import mutagen
 
-import propresenter.utils
 from .xml import File as XML
-
-getDateString = lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
-uuid = lambda: str(uuid4()).upper()
+from .. import utils
 
 
 class File(XML):
-    # Reminder that variables act as pointers instead of creating a new copy!
     def __init__(self, filePath: str = None):
         if filePath:
             XML.__init__(self, filePath, ("array", "RVPlaylistNode", "RVDocumentCue", "RVHeaderCue"))
@@ -25,9 +20,9 @@ class File(XML):
                     "@buildNumber": 6016,
                     "RVPlaylistNode": [{
                         "@displayName": "root",
-                        "@UUID": uuid(),
+                        "@UUID": utils.UUID.generateUUID(),
                         "@smartDirectoryURL": "",
-                        "@modifiedDate": getDateString(),
+                        "@modifiedDate": utils.getDateString(),
                         "@type": 0,
                         "@isExpanded": 0,
                         "@hotFolderType": 2,
@@ -79,9 +74,9 @@ class File(XML):
                     def folder(folderName, typeNumber: int = 2):
                         root = elem.data["array"][0]
                         data = {"@displayName": folderName,
-                                "@UUID": uuid(),
+                                "@UUID": utils.UUID.generateUUID(),
                                 "@smartDirectoryURL": "",
-                                "@modifiedDate": getDateString(),
+                                "@modifiedDate": utils.getDateString(),
                                 "@type": typeNumber,
                                 "@isExpanded": True,
                                 "@hotFolderType": "2",
@@ -124,28 +119,28 @@ class File(XML):
                         if __mediaObject is None:
                             raise Exception("Bad media file")
                         __mediaObjectDuration = int(__mediaObject.info.length * 600)
-                        __displayName = (name+".") if name else os.path.basename(audioPath)
+                        __displayName = (name + ".") if name else os.path.basename(audioPath)
 
                         root = elem.data["array"][0]
                         data = {
-                            "@UUID": uuid(),
+                            "@UUID": utils.UUID.generateUUID(),
                             "@displayName": __displayName,
-                            "@actionType": 0, # ???
-                            "@enabled": 1, # ???
-                            "@timeStamp": 0, # ???
-                            "@delayTime": 0, # ???
-                            "@tags": "", # ???
-                            "@nextCueUUID": "00000000-0000-0000-0000-000000000000", # ???
-                            "behavior": "1", # ???
-                            "alignment": "4", # ???
-                            "dateAdded": "", # ???
+                            "@actionType": 0,  # ???
+                            "@enabled": 1,  # ???
+                            "@timeStamp": 0,  # ???
+                            "@delayTime": 0,  # ???
+                            "@tags": "",  # ???
+                            "@nextCueUUID": "00000000-0000-0000-0000-000000000000",  # ???
+                            "behavior": "1",  # ???
+                            "alignment": "4",  # ???
+                            "dateAdded": "",  # ???
                             "@__order__": self.currentOrder + 1,
                             "RVAudioElement": [{
                                 "@rvXMLIvarName": "element",
                                 "@volume": 1,
                                 "@playRate": 1,
                                 "@loopBehaviour": 0,
-                                "@audioType": 0, # ???
+                                "@audioType": 0,  # ???
                                 "@inPoint": 0,
                                 "@outPoint": __mediaObjectDuration,
                                 "@displayName": os.path.basename(audioPath),  # doesn't matter
@@ -169,12 +164,12 @@ class File(XML):
                         __mediaObject = mutagen.File(videoPath)
                         if __mediaObject is None:
                             raise Exception("Bad media file")
-                        __mediaObjectDuration = int(__mediaObject.info.length * 600) # timeScale = 600
-                        __displayName = (name+".") if name else os.path.basename(videoPath)
+                        __mediaObjectDuration = int(__mediaObject.info.length * 600)  # timeScale = 600
+                        __displayName = (name + ".") if name else os.path.basename(videoPath)
 
                         root = elem.data["array"][0]
                         data = {
-                            "@UUID": uuid(),
+                            "@UUID": utils.UUID.generateUUID(),
                             "@displayName": __displayName,
                             "@actionType": 0,
                             "@enabled": 1,
@@ -194,9 +189,9 @@ class File(XML):
                                 "@source": urllib.parse.quote(videoPath),
 
                                 "@scaleBehavior": 0,
-                                    # 0 - Scale to Fit
-                                    # 1 - Scale to Fill
-                                    # 2 - Stretch to Fit
+                                # 0 - Scale to Fit
+                                # 1 - Scale to Fill
+                                # 2 - Stretch to Fit
 
                                 "@flippedHorizontally": "false",
                                 "@flippedVertically": "false",
@@ -205,7 +200,7 @@ class File(XML):
                                 "@playRate": "1",
                                 "@playbackBehavior": "0",
 
-                                "@timeScale": "600", # WHY THOUGH???
+                                "@timeScale": "600",  # WHY THOUGH???
                                 "@inPoint": "0",  #
                                 "@outPoint": __mediaObjectDuration,  #
                                 "@endPoint": __mediaObjectDuration,  #
@@ -271,20 +266,20 @@ class File(XML):
 
                         root = elem.data["array"][0]
                         data = {
-                            "@UUID": uuid(),
+                            "@UUID": utils.UUID.generateUUID(),
                             "@displayName": __displayName,
-                            "@actionType": 0, # ???
+                            "@actionType": 0,  # ???
                             "@enabled": 1,
-                            "@timeStamp": 0, # ???
-                            "@delayTime": 0, # ???
+                            "@timeStamp": 0,  # ???
+                            "@delayTime": 0,  # ???
                             "@tags": "",
                             "@nextCueUUID": "00000000-0000-0000-0000-000000000000",
-                            "@behavior": 2, # ???
+                            "@behavior": 2,  # ???
                             "@alignment": 4,
-                                # 0 1 2
-                                # 3 4 5
-                                # 6 7 8
-                            "@dateAdded": "", # ???
+                            # 0 1 2
+                            # 3 4 5
+                            # 6 7 8
+                            "@dateAdded": "",  # ???
                             "@__order__": self.currentOrder + 1,
                             "RVImageElement": [{
                                 "@rvXMLIvarName": "element",
@@ -350,14 +345,14 @@ class File(XML):
                     def document(documentPath):
                         root = elem.data["array"][0]
                         data = {
-                            "@UUID": uuid(),
+                            "@UUID": utils.UUID.generateUUID(),
                             "@displayName": os.path.basename(documentPath),  # doesn't matter
                             "@filePath": urllib.parse.quote(documentPath),
                             "@selectedArrangementID": "",
-                            "@actionType": 0, # ???
+                            "@actionType": 0,  # ???
                             "@enabled": 1,
-                            "@timeStamp": 0, # ???
-                            "@delayTime": 0, # ???
+                            "@timeStamp": 0,  # ???
+                            "@delayTime": 0,  # ???
                             "@__order__": self.currentOrder + 1,
                         }
                         if "RVDocumentCue" in root:
@@ -372,21 +367,21 @@ class File(XML):
                     @staticmethod
                     def header(headerName, *args, headerColour=None):
                         if headerColour:
-                            if propresenter.utils.colorUtil.checks.hex(headerColour):
+                            if utils.colorUtil.checks.hex(headerColour):
                                 headerColour = " ".join(
-                                    (propresenter.utils.colorUtil.conversion.hex_to_hsl(headerColour) + ("1",))[:4])
+                                    (utils.colorUtil.conversion.hex_to_hsl(headerColour) + ("1",))[:4])
                             elif type(headerColour) == tuple:
-                                if all(map(propresenter.utils.colorUtil.checks.between0_255, headerColour)):
-                                    headerColour = " ".join((propresenter.utils.colorUtil.conversion.rgb_to_hsl(
+                                if all(map(utils.colorUtil.checks.between0_255, headerColour)):
+                                    headerColour = " ".join((utils.colorUtil.conversion.rgb_to_hsl(
                                         headerColour[:3]) + headerColour[3:] + (1,))[:4])
-                                elif all(map(propresenter.utils.colorUtil.checks.between0_1, headerColour)):
+                                elif all(map(utils.colorUtil.checks.between0_1, headerColour)):
                                     headerColour = " ".join((headerColour + (1,))[:4])
                         if not headerColour:
                             headerColour = "0.894117647058824 0.894117647058824 0.894117647058824 1"
 
                         root = elem.data["array"][0]
                         data = {"@displayName": headerName,
-                                "@UUID": uuid(),
+                                "@UUID": utils.UUID.generateUUID(),
                                 "@actionType": 0,
                                 "@enabled": 1,
                                 "@timeStamp": 0,
@@ -414,7 +409,7 @@ class File(XML):
         class Document(Element):
             pass
 
-        class Header(Element, propresenter.utils.HSLa_Handler):
+        class Header(Element, utils.HSLa_Handler):
             def __init__(self, *args):
                 HSLa_Store = self.data["@color"]
 
@@ -491,7 +486,7 @@ class File(XML):
                 '''  # Transition #
 
                 class effects(list):
-                   pass
+                    pass
 
                 '''
                 # Effects
@@ -628,7 +623,6 @@ class File(XML):
                 }
                 '''  # Effects
 
-
                 self.effects = effects()
 
             pass
@@ -655,7 +649,7 @@ class File(XML):
                 if type(item) == int:
                     # return Element(list.__getitem__(self, item))
                     return list.__getitem__(self, item)
-                elif propresenter.utils.validUUID(item):
+                elif utils.validUUID(item):
                     item = item.upper()
                     if item not in [s["@UUID"].upper() for s in self]:
                         return None
@@ -688,8 +682,8 @@ class File(XML):
                 typeNumber = kwargs.get("typeNumber", 2)  # hide the typeNumber from autocompletes of development IDEs
 
                 root = self.data["RVPlaylistDocument"]["RVPlaylistNode"][0]["array"][0]
-                data = {"@displayName": folderName, "@UUID": uuid(), "@smartDirectoryURL": "",
-                        "@modifiedDate": getDateString(), "@type": typeNumber, "@isExpanded": "true",
+                data = {"@displayName": folderName, "@UUID": utils.UUID.generateUUID(), "@smartDirectoryURL": "",
+                        "@modifiedDate": utils.getDateString(), "@type": typeNumber, "@isExpanded": "true",
                         "@hotFolderType": "2", "@__order__": self.currentOrder + 1,
                         "array": [
                             {

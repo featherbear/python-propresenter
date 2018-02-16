@@ -1,7 +1,7 @@
 import math
+import os
 from collections import OrderedDict
 from uuid import uuid4
-import os
 
 from .xml import File as XML
 
@@ -15,11 +15,11 @@ class File():
     # Reminder that variables act as pointers instead of creating a new copy!
 
     def __init__(self, fileName: str, fileDirectory: str):
-        import propresenter.utils
+        from .. import utils
 
         self._file = XML(os.path.join(fileDirectory, fileName), ("RVDisplaySlide", "RVPoint"))
         self._root = self._file.data["RVPresentationDocument"] if "RVPresentationDocument" in self._file.data else \
-        self._file.data["RVTemplateDocument"]
+            self._file.data["RVTemplateDocument"]
 
         class Elements(list):
             def __init__(self, *args, **kwargs):
@@ -28,7 +28,7 @@ class File():
             def __getitem__(self, item):
                 if type(item) == int:
                     return Element(list.__getitem__(self, item))
-                elif propresenter.utils.validUUID(item):
+                elif utils.validUUID(item):
                     item = item.upper()
                     if item not in [s["@UUID"].upper() for s in self]:
                         return None
@@ -62,7 +62,7 @@ class File():
             def changeUUID(self, uuid=None, updateReferences=True):
                 # TODO check if used UUID
                 if not uuid: uuid = str(uuid4())
-                if not propresenter.utils.validUUID(uuid):
+                if not utils.validUUID(uuid):
                     raise ValueError("Invalid UUID: " + uuid)
 
                 if updateReferences:
@@ -134,7 +134,7 @@ class File():
 
             @opacity.setter
             def opacity(self, opacity: float):
-                if not propresenter.utils.colorUtil.checks.between0_1(opacity):
+                if not utils.colorUtil.checks.between0_1(opacity):
                     raise ValueError("Bad opacity (min: 0.0, max: 1.0)")
                 self.obj["@opacity"] = str(float)
 
@@ -146,7 +146,7 @@ class File():
             def rotation(self, degree: int):
                 self.obj["@rotation"] = str(degree % 360)
 
-            class fill(_propertyGrp, propresenter.utils.HSLa_Handler):
+            class fill(_propertyGrp, utils.HSLa_Handler):
                 def __init__(self):
                     self.HSLa_Store = self.obj.get("@fillColor")
 
@@ -158,7 +158,7 @@ class File():
                 def enabled(self, state: bool):
                     self.obj["@drawingFill"] = str(state).lower()
 
-            class border(_propertyGrp, propresenter.utils.HSLa_Handler):
+            class border(_propertyGrp, utils.HSLa_Handler):
                 def __init__(self):
                     self.HSLa_Store = self.obj["dictionary"]["NSColor"]
 
@@ -190,7 +190,7 @@ class File():
                         raise ValueError("Bad width (min: 0, max: 100)")
                     self.obj["dictionary"]["NSNumber"] = str(width)
 
-            class shadow(_propertyGrp, propresenter.utils.HSLa_Handler):
+            class shadow(_propertyGrp, utils.HSLa_Handler):
                 @property
                 def HSLa_Store(self):
                     return self.obj["shadow"].split("|")[1]
@@ -255,6 +255,7 @@ class File():
                     if not 0 <= width <= 100:
                         raise ValueError("Bad width (min: 0, max: 100)")
                     self.obj["dictionary"]["NSNumber"] = str(width)
+
         class VideoElement(Element):
             # source
             # manufactureURL
@@ -275,6 +276,7 @@ class File():
             # flippedVertically
             # imageOffset
             pass
+
         class ImageElement(Element):
             # source
             # scaleSize
@@ -286,6 +288,7 @@ class File():
             # format
             # imageOffset
             pass
+
         class LiveViewElement(Element):
             # scaleBehaviour
             # flippedVertically
@@ -299,11 +302,13 @@ class File():
             # audioSourceModelName (blank for disable)
             # audioVolume (float 0-2)
             pass
+
         class HTMLShapeElement(Element):
             # urlString
             # requestInterval - 0 to disable
             # requiresLiveUpdates
             pass
+
         class TextCrawlerElement(Element):
             # rssParsingStyle
             # textCrawlerType
@@ -313,16 +318,21 @@ class File():
             # adjustHeightToFit
             # // got text stuff
             pass
+
         class BezierPathElement(Element):
             def __init__(self):
                 self.points = self.points(self.obj["array"])
+
             class points(list):
                 def clear(self):
                     raise NotImplementedError
+
                 def addPoint(self):
                     raise NotImplementedError
+
                 def removeLastPoint(self):
                     raise NotImplementedError
+
         class TextElement(Element):
             @property
             def adjustsHeightToFit(self):
@@ -385,7 +395,7 @@ class File():
             def __getitem__(self, item):
                 if type(item) == int:
                     return Slide(list.__getitem__(self, item))
-                elif propresenter.utils.validUUID(item):
+                elif utils.validUUID(item):
                     item = item.upper()
                     if item not in [s["@UUID"] for s in self]:
                         return None
@@ -410,7 +420,7 @@ class File():
                 # This is the wrong way to go about, but hey?
                 pass
 
-            class background(_propertyGrp, propresenter.utils.HSLa_Handler):
+            class background(_propertyGrp, utils.HSLa_Handler):
                 def __init__(self):
                     self.HSLa_Store = self.obj.get("@backgroundColor")
 
@@ -429,7 +439,7 @@ class File():
             def changeUUID(self, uuid=None, updateReferences=True):
                 # TODO check if used UUID
                 if not uuid: uuid = str(uuid4())
-                if not propresenter.utils.validUUID(uuid):
+                if not utils.validUUID(uuid):
                     raise ValueError("Invalid UUID: " + uuid)
 
                 if updateReferences:
@@ -468,7 +478,7 @@ class File():
             def enabled(self, state: bool):
                 self.obj["@enabled"] = str(bool).lower()
 
-            class label(_propertyGrp, propresenter.utils.HSLa_Handler):
+            class label(_propertyGrp, utils.HSLa_Handler):
                 def __init__(self):
                     self.HSLa_Store = self.obj["@highlightColor"]
 

@@ -1,5 +1,5 @@
 import propresenter
-from propresenter.utils import xml
+from propresenter.files.utils import xml
 
 class Stub():
     fileName = None
