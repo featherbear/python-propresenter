@@ -13,10 +13,9 @@ class SettingsXML():
     _forceRoot = None
 
     def __new__(cls, *args, **kwargs):
-        # super().__new__(cls) ???
         _obj = super().__new__(cls)
         _obj._file = XML(path.join(cls._fileDirectory, cls._fileName), cls._forceList)
-        _obj._root = _obj._file.data[cls._forceRoot] if cls._forceRoot else cls._file.data
+        _obj._root = _obj._file._data[cls._forceRoot] if cls._forceRoot else cls._file._data
         return _obj
 
     def save(self):

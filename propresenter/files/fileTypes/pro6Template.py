@@ -18,8 +18,8 @@ class File():
         from .. import utils
 
         self._file = XML(os.path.join(fileDirectory, fileName), ("RVDisplaySlide", "RVPoint"))
-        self._root = self._file.data["RVPresentationDocument"] if "RVPresentationDocument" in self._file.data else \
-            self._file.data["RVTemplateDocument"]
+        self._root = self._file._data["RVPresentationDocument"] if "RVPresentationDocument" in self._file._data else \
+            self._file._data["RVTemplateDocument"]
 
         class Elements(list):
             def __init__(self, *args, **kwargs):
