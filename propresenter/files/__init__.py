@@ -25,4 +25,5 @@ from . import fileTypes
 from . import settings
 
 __playlistFile = os.path.join(appDataLocation,"PlaylistData",settings.GeneralPreferences.currentLibrary.name+".pro6pl")
-playlist = fileTypes.Playlist(__playlistFile) if os.path.exists(__playlistFile) and os.path.isfile(__playlistFile) else None
+playlist = fileTypes.Playlist(__playlistFile) if os.path.exists(__playlistFile) and os.path.isfile(__playlistFile) else (fileTypes.Playlist().save(__playlistFile) or fileTypes.Playlist(__playlistFile))
+documentPath = settings.GeneralPreferences.currentLibrary.location
